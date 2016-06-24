@@ -39,11 +39,11 @@ object Main extends App {
 ```scala
 object Main extends App {
 
-  Vodka(host = Host,
-        port = Port,
-        logError = Function for error logging,
-        errorResponse = Custom internal error,
-        notFoundResponse = Custom 404 page) {
+  Vodka(host = `Host`,
+        port = `Port`,
+        logError = `Function for error logging`,
+        errorResponse = `Custom internal error`,
+        notFoundResponse = `Custom 404 page`) {
     // ...
   }
 }  

@@ -17,14 +17,14 @@ object Vodka {
 
   type RequestHandler = PartialFunction[HttpRequest, Future[HttpResponse]]
   type NotFoundHandler = HttpRequest => Future[HttpResponse]
-  type ErrorHandler = (Throwable) => Future[HttpResponse]
+  type ErrorHandler = (Throwable) => HttpResponse
   type LogError = (String, Option[Throwable]) => Unit
 
   def apply(host: String = "0.0.0.0",
             port: Int = 9090,
-            logError: LogError,
-            errorResponse: ErrorHandler,
-            notFoundResponse: NotFoundHandler)(
+            logError: LogError = logError,
+            errorHandler: ErrorHandler = errorHandler,
+            notFoundHandler: NotFoundHandler = notFoundHandler)(
       onRequest: RequestHandler): AsynchronousServerSocketChannel = {
 
     val serverAddress = new InetSocketAddress(host, port)
@@ -106,7 +106,7 @@ object Vodka {
             readHeader(headerBuffer, clientChannel) flatMap { request =>
               readBody(clientChannel, request) flatMap { _ =>
                 if (onRequest.isDefinedAt(request)) onRequest(request)
-                else Future.successful(HttpResponse.create(StatusCode.`Not Found`, "Not found"))
+                else notFoundHandler(request)
               }
             }
           responseFuture onComplete {
@@ -114,17 +114,35 @@ object Vodka {
               writeAndClose(response.toBuffer)
             case Failure(exc) =>
               logError("Error occurred while processing request", Some(exc))
-              val response = HttpResponse.create(
-                  StatusCode.`Internal Server Error`, "Internal Server Error")
-              val writeBuffer = response.toBuffer
-              writeAndClose(writeBuffer)
+              val buffer = errorHandler(exc).toBuffer
+              writeAndClose(buffer)
           }
           acceptLoop()
-        case Failure(_) => acceptLoop()
+        case Failure(exception) =>
+          logError("Unable to accept client", Some(exception))
+          acceptLoop()
       }
     }
 
     acceptLoop()
     serverChannel
+  }
+
+  private val DefaultInternalErrorResponse =
+    HttpResponse.create(StatusCode.`Internal Server Error`, "Internal server error")
+
+  private val DefaultNotFoundResponse = Future successful {
+    HttpResponse.create(StatusCode.`Not Found`, "Internal server error")
+  }
+
+  private def errorHandler(throwable: Throwable): HttpResponse =
+    DefaultInternalErrorResponse
+
+  private def notFoundHandler(request: HttpRequest): Future[HttpResponse] =
+    DefaultNotFoundResponse
+
+  private def logError(message: String, throwable: Option[Throwable]): Unit = {
+    System.err.println(message)
+    throwable.foreach(_.printStackTrace(System.err))
   }
 }
