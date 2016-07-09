@@ -2,7 +2,7 @@ package vodka
 
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
-import java.nio.channels.{AsynchronousChannelGroup, AsynchronousServerSocketChannel, AsynchronousSocketChannel, CompletionHandler}
+import java.nio.channels._
 import java.util.concurrent.ForkJoinPool
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -118,6 +118,8 @@ object Vodka {
               writeAndClose(buffer)
           }
           acceptLoop()
+        case Failure(_: ClosedChannelException) =>
+          // do nothing
         case Failure(exception) =>
           logError("Unable to accept client", Some(exception))
           acceptLoop()

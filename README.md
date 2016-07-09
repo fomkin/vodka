@@ -18,13 +18,14 @@ libraryDependencies += "com.github.fomkin" %% "vodka" % "0.1.0"
 
 ```scala
 import scala.concurrent.Future
-import Vodka._
+import vodka._
 
 object Main extends App {
   
   Vodka() {
     case request <| GET -> Root / "hello" / name =>
-      Future.successful(s"Hello, comrade $name. Let's drink vodka.")
+      var res = HttpResponse.Ok(s"Hello, comrade $name. Let's drink vodka.")
+      Future.successful(res)
   }
   
 }
