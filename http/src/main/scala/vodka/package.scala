@@ -42,10 +42,4 @@ package object vodka {
   val POST = "POST"
   val PUT = "PUT"
   val DELETE = "DELETE"
-
-  implicit val stringToResponseBody = new ToResponseBody[String] {
-    def toBuffer(value: String, charset: Charset): ByteBuffer =
-      ByteBuffer.wrap(value.getBytes(charset))
-    def contentType: String = "text/plain"
-  }
 }

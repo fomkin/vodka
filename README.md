@@ -11,7 +11,7 @@ Let's be fair, Play and akka-http are too large and too complicated for making s
 Give a drink vodka to your SBT
 
 ```scala
-libraryDependencies += "com.github.fomkin" %% "vodka" % "0.1.1"
+libraryDependencies += "com.github.fomkin" %% "vodka" % "0.1.2"
 ```
 
 # Usage

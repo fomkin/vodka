@@ -14,6 +14,13 @@ trait ToResponseBody[-T] {
 }
 
 object ToResponseBody {
+
+  implicit val string = new ToResponseBody[String] {
+    def toBuffer(value: String, charset: Charset): ByteBuffer =
+      ByteBuffer.wrap(value.getBytes(charset))
+    def contentType: String = "text/plain"
+  }
+
   implicit val byteBuffer = new ToResponseBody[ByteBuffer] {
     def toBuffer(value: ByteBuffer, charset: Charset): ByteBuffer = value
     val contentType = "application/octet-stream"
