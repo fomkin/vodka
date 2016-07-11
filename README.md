@@ -11,7 +11,7 @@ Let's be fair, Play and akka-http are too large and too complicated for making s
 Give a drink vodka to your SBT
 
 ```scala
-libraryDependencies += "com.github.fomkin" %% "vodka" % "0.1.0"
+libraryDependencies += "com.github.fomkin" %% "vodka" % "0.1.1"
 ```
 
 # Usage
@@ -37,17 +37,15 @@ object Main extends App {
 
 ## Configuration
 
-```scala
-object Main extends App {
+Vodka takes configuration via `Vodka` constructor.
 
-  Vodka(host = `Host`,
-        port = `Port`,
-        logError = `Function for error logging`,
-        errorResponse = `Custom internal error`,
-        notFoundResponse = `Custom 404 page`) {
-    // ...
-  }
-}  
-```
+| Argument           | Description                                        |
+|--------------------|----------------------------------------------------|
+| `host`             |  Host to bind. 0.0.0.0 by default.                 |
+| `port`             | Port to bind. 8080 by default.                     |
+| `logError`         | Function for error logging. `println` by default.  |
+| `notFoundHandler`  | Response generator when no route was matched.      |
+| `errorHandler`     | Response generator when exception was thrown.      |
+| `maxContentLength` | Max size of input body                             |
 
 That's all. Enjoy and na zdorovie!

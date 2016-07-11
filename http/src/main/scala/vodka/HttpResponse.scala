@@ -16,11 +16,6 @@ case class HttpResponse(
     val remaining = body.remaining()
     val stringBuilder = StringBuilder.newBuilder
 
-    val headersWithContentLength = {
-      if (remaining == 0) headers
-      else headers + (Header.ContentLength -> remaining.toString)
-    }
-
     // Status line
     stringBuilder
       .append("HTTP/1.1 ")
@@ -30,7 +25,7 @@ case class HttpResponse(
       .append("\r\n")
 
     // Headers
-    for ((k, v) <- headersWithContentLength) {
+    for ((k, v) <- headers) {
       stringBuilder.append(k).append(": ").append(v).append("\r\n")
     }
     stringBuilder.append("\r\n")
@@ -50,7 +45,20 @@ object HttpResponse {
             headers: Map[String, String] = Map.empty,
             charset: Charset = StandardCharsets.UTF_8)(
       implicit ev: ToResponseBody[T]): HttpResponse = {
-    create(StatusCode.`OK`, body, headers, charset)
+    val bodyBuffer = ev.toBuffer(body, charset)
+    HttpResponse(
+      statusCode =
+        if (bodyBuffer.remaining > 0) StatusCode.`OK`
+        else StatusCode.`No Content`,
+      body = bodyBuffer,
+      headers = {
+        val headersWithContentLength =
+          if (bodyBuffer.remaining > 0) headers + (Header.ContentLength -> bodyBuffer.remaining.toString)
+          else headers
+        if (headersWithContentLength.contains(Header.ContentType)) headers
+        else headersWithContentLength + (Header.ContentType -> ev.contentType)
+      }
+    )
   }
 
   def create[T](statusCode: StatusCode,
@@ -62,9 +70,12 @@ object HttpResponse {
     HttpResponse(
         statusCode = statusCode,
         body = bodyBuffer,
-        headers =
-          if (headers.contains(Header.ContentType)) headers
-          else headers + (Header.ContentType -> ev.contentType)
+        headers = {
+          val headersWithContentLength = headers +
+             (Header.ContentLength -> bodyBuffer.remaining.toString)
+          if (headersWithContentLength.contains(Header.ContentType)) headers
+          else headersWithContentLength + (Header.ContentType -> ev.contentType)
+        }
     )
   }
 }

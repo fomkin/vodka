@@ -24,7 +24,8 @@ object Vodka {
             port: Int = 9090,
             logError: LogError = logError,
             errorHandler: ErrorHandler = errorHandler,
-            notFoundHandler: NotFoundHandler = notFoundHandler)(
+            notFoundHandler: NotFoundHandler = notFoundHandler,
+            maxContentLength: Int = 1024000)(
       onRequest: RequestHandler): AsynchronousServerSocketChannel = {
 
     val serverAddress = new InetSocketAddress(host, port)
@@ -65,12 +66,17 @@ object Vodka {
 
       def loop(): Unit = cb[Integer](clientChannel.read(headerBuffer, (), _)) {
         case Success(length) =>
-          if (length > 0) {
-            HttpRequest.fromBuffer(headerBuffer) match {
-              case None => loop()
-              case Some(request) =>
-                promise.success(request)
+          try {
+            if (length > 0) {
+              HttpRequest.fromBuffer(headerBuffer, maxContentLength) match {
+                case None => loop()
+                case Some(request) =>
+                  promise.success(request)
+              }
             }
+          } catch {
+            case e: Throwable =>
+              promise.failure(e)
           }
         case Failure(exc) =>
           promise.failure(exc)
@@ -134,11 +140,14 @@ object Vodka {
     HttpResponse.create(StatusCode.`Internal Server Error`, "Internal server error")
 
   private val DefaultNotFoundResponse = Future successful {
-    HttpResponse.create(StatusCode.`Not Found`, "Internal server error")
+    HttpResponse.create(StatusCode.`Not Found`, "Not found")
   }
 
-  private def errorHandler(throwable: Throwable): HttpResponse =
-    DefaultInternalErrorResponse
+  private def errorHandler(throwable: Throwable): HttpResponse = throwable match {
+    case badRequest: BadRequestException =>
+      HttpResponse.create(StatusCode.`Bad Request`, badRequest.getMessage)
+    case _ => DefaultInternalErrorResponse
+  }
 
   private def notFoundHandler(request: HttpRequest): Future[HttpResponse] =
     DefaultNotFoundResponse

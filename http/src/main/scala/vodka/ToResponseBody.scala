@@ -12,3 +12,10 @@ trait ToResponseBody[-T] {
   def toBuffer(value: T, charset: Charset): ByteBuffer
   def contentType: String
 }
+
+object ToResponseBody {
+  implicit val byteBuffer = new ToResponseBody[ByteBuffer] {
+    def toBuffer(value: ByteBuffer, charset: Charset): ByteBuffer = value
+    val contentType = "application/octet-stream"
+  }
+}

@@ -18,7 +18,7 @@ object HttpRequest {
     * @return None if header isn't complete and
     *         Some if header was read
     */
-  def fromBuffer(buffer: ByteBuffer): Option[HttpRequest] = {
+  def fromBuffer(buffer: ByteBuffer, maxContentLength: Int): Option[HttpRequest] = {
     val savedPosition = buffer.position()
     buffer.rewind()
     // Read until \n\n
@@ -51,9 +51,12 @@ object HttpRequest {
           xs.toMap
         }
         val body = headers.get(Header.ContentLength) match {
-          case Some(length) =>
+          case Some(lengthString) =>
+            val length = lengthString.toInt
+            if (length >= maxContentLength)
+              throw new MaxContentLength()
             val savedLimit = buffer.limit()
-            val bodyBuffer = ByteBuffer.allocate(length.toInt)
+            val bodyBuffer = ByteBuffer.allocate(length)
             buffer.limit(savedPosition)
             bodyBuffer.put(buffer.slice())
             buffer.limit(savedLimit)
