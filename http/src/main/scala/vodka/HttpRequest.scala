@@ -54,7 +54,7 @@ object HttpRequest {
           case Some(lengthString) =>
             val length = lengthString.toInt
             if (length >= maxContentLength)
-              throw new MaxContentLength()
+              throw new MaxContentLengthException()
             val savedLimit = buffer.limit()
             val bodyBuffer = ByteBuffer.allocate(length)
             buffer.limit(savedPosition)

@@ -41,11 +41,10 @@ case class HttpResponse(
 }
 
 object HttpResponse {
-  def Ok[T](body: T,
+  def Ok[T](body: ResponseBody[T],
             headers: Map[String, String] = Map.empty,
-            charset: Charset = StandardCharsets.UTF_8)(
-      implicit ev: ToResponseBody[T]): HttpResponse = {
-    val bodyBuffer = ev.toBuffer(body, charset)
+            charset: Charset = StandardCharsets.UTF_8): HttpResponse = {
+    val bodyBuffer = body.buffer(charset)
     HttpResponse(
       statusCode =
         if (bodyBuffer.remaining > 0) StatusCode.`OK`
@@ -56,17 +55,16 @@ object HttpResponse {
           if (bodyBuffer.remaining > 0) headers + (Header.ContentLength -> bodyBuffer.remaining.toString)
           else headers
         if (headersWithContentLength.contains(Header.ContentType)) headers
-        else headersWithContentLength + (Header.ContentType -> ev.contentType)
+        else headersWithContentLength + (Header.ContentType -> body.contentType(charset))
       }
     )
   }
 
   def create[T](statusCode: StatusCode,
-                body: T,
+                body: ResponseBody[T],
                 headers: Map[String, String] = Map.empty,
-                charset: Charset = StandardCharsets.UTF_8)(
-      implicit ev: ToResponseBody[T]): HttpResponse = {
-    val bodyBuffer = ev.toBuffer(body, charset)
+                charset: Charset = StandardCharsets.UTF_8): HttpResponse = {
+    val bodyBuffer = body.buffer(charset)
     HttpResponse(
         statusCode = statusCode,
         body = bodyBuffer,
@@ -74,7 +72,7 @@ object HttpResponse {
           val headersWithContentLength = headers +
              (Header.ContentLength -> bodyBuffer.remaining.toString)
           if (headersWithContentLength.contains(Header.ContentType)) headers
-          else headersWithContentLength + (Header.ContentType -> ev.contentType)
+          else headersWithContentLength + (Header.ContentType -> body.contentType(charset))
         }
     )
   }

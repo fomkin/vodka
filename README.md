@@ -11,7 +11,7 @@ Let's be fair, Play and akka-http are too large and too complicated for making s
 Give a drink vodka to your SBT
 
 ```scala
-libraryDependencies += "com.github.fomkin" %% "vodka" % "0.1.2"
+libraryDependencies += "com.github.fomkin" %% "vodka" % "0.2.0"
 ```
 
 # Usage
@@ -47,5 +47,27 @@ Vodka takes configuration via `Vodka` constructor.
 | `notFoundHandler`  | Response generator when no route was matched.      |
 | `errorHandler`     | Response generator when exception was thrown.      |
 | `maxContentLength` | Max size of input body                             |
+
+# JSON with Pushka
+
+See https://github.com/fomkin/pushka
+
+```scala
+libraryDependencies += "com.github.fomkin" %% "vodka-pushka" % "0.2.0"
+```
+
+```scala
+import pushka._
+import vodka.pushkaSupport._
+
+@pushka
+case class Person(name: String, age: Int)
+ 
+Vodka() {
+  case fromJson(body) <| POST -> Root / "hello" =>
+    val person = read[Person](body)
+    HttpResponse.Ok(person.name)
+}
+```
 
 That's all. Enjoy and na zdorovie!

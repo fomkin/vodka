@@ -111,8 +111,15 @@ object Vodka {
           val responseFuture =
             readHeader(headerBuffer, clientChannel) flatMap { request =>
               readBody(clientChannel, request) flatMap { _ =>
-                if (onRequest.isDefinedAt(request)) onRequest(request)
-                else notFoundHandler(request)
+                try {
+                  onRequest.lift(request) match {
+                    case Some(future) => future
+                    case None => notFoundHandler(request)
+                  }
+                } catch {
+                  case e: Throwable =>
+                    Future.failed(e)
+                }
               }
             }
           responseFuture onComplete {
@@ -144,8 +151,8 @@ object Vodka {
   }
 
   private def errorHandler(throwable: Throwable): HttpResponse = throwable match {
-    case badRequest: BadRequestException =>
-      HttpResponse.create(StatusCode.`Bad Request`, badRequest.getMessage)
+    case badRequest: UserException =>
+      HttpResponse.create(badRequest.statusCode, badRequest.getMessage)
     case _ => DefaultInternalErrorResponse
   }
 
