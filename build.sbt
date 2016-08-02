@@ -32,7 +32,7 @@ val publishSettings = Seq(
 
 val commonSettings = publishSettings ++ Seq(
   organization := "com.github.fomkin",
-  version := "0.2.0",
+  version := "0.2.1",
   libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.0-M15" % "test",
   scalacOptions ++= Seq(
     "-deprecation",

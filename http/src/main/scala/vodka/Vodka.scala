@@ -126,7 +126,6 @@ object Vodka {
             case Success(response) =>
               writeAndClose(response.toBuffer)
             case Failure(exc) =>
-              logError("Error occurred while processing request", Some(exc))
               val buffer = errorHandler(exc).toBuffer
               writeAndClose(buffer)
           }
