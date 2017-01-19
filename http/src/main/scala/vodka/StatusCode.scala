@@ -1,5 +1,7 @@
 package vodka
 
+import scala.annotation.tailrec
+
 sealed abstract class StatusCode(val value: Int, val reasonPhrase: String) {
   override def hashCode(): Int = value.hashCode
   override def equals(obj: scala.Any): Boolean = obj match {
@@ -13,6 +15,49 @@ object StatusCode {
   def apply(value: Int, reasonPhrase: String): StatusCode =
     new StatusCode(value, reasonPhrase) {}
 
+  def apply(value: Int): StatusCode = (value: @tailrec) match {
+    case 100 => `Continue`
+    case 101 => `Switching Protocols`
+    case 200 => `OK`
+    case 201 => `Created`
+    case 202 => `Accepted`
+    case 203 => `Non-Authoritative Information`
+    case 204 => `No Content`
+    case 205 => `Reset Content`
+    case 206 => `Partial Content`
+    case 300 => `Multiple Choices`
+    case 301 => `Moved Permanently`
+    case 302 => `Found`
+    case 303 => `See Other`
+    case 304 => `Not Modified`
+    case 305 => `Use Proxy`
+    case 307 => `Temporary Redirect`
+    case 400 => `Bad Request`
+    case 401 => `Unauthorized`
+    case 402 => `Payment Required`
+    case 403 => `Forbidden`
+    case 404 => `Not Found`
+    case 405 => `Method Not Allowed`
+    case 406 => `Not Acceptable`
+    case 407 => `Proxy Authentication Required`
+    case 408 => `Request Time-out`
+    case 409 => `Conflict`
+    case 410 => `Gone`
+    case 411 => `Length Required`
+    case 412 => `Precondition Failed`
+    case 413 => `Request Entity Too Large`
+    case 414 => `Request-URI Too Large`
+    case 415 => `Unsupported Media Type`
+    case 416 => `Requested range not satisfiable`
+    case 417 => `Expectation Failed`
+    case 500 => `Internal Server Error`
+    case 501 => `Not Implemented`
+    case 502 => `Bad Gateway`
+    case 503 => `Service Unavailable`
+    case 504 => `Gateway Time-out`
+    case 505 => `HTTP Version not supported`
+  }
+  
   def unapply(arg: StatusCode): Option[(Int, String)] = {
     Some((arg.value, arg.reasonPhrase))
   }

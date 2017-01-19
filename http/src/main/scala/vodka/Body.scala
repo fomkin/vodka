@@ -3,21 +3,21 @@ package vodka
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
-trait ResponseBody[+T] extends Any {
+trait Body[+T] extends Any {
   def buffer(charset: Charset): ByteBuffer
   def contentType(charset: Charset): String
 }
 
-object ResponseBody {
+object Body {
 
-  implicit final class StringResponseBody(val s: String) extends AnyVal with ResponseBody[String] {
+  implicit final class StringBody(val s: String) extends AnyVal with Body[String] {
     def buffer(charset: Charset): ByteBuffer =
       ByteBuffer.wrap(s.getBytes(charset))
     def contentType(charset: Charset): String =
       s"text/plain; charset=${charset.displayName}"
   }
 
-  implicit final class ByteBufferResponseBody(val bb: ByteBuffer) extends AnyVal with ResponseBody[ByteBuffer] {
+  implicit final class ByteBufferBody(val bb: ByteBuffer) extends AnyVal with Body[ByteBuffer] {
     def buffer(charset: Charset): ByteBuffer = bb
     def contentType(charset: Charset) = "application/octet-stream"
   }

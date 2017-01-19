@@ -7,7 +7,7 @@ import pushka.Ast
 
 object pushkaSupport {
 
-  implicit final class StringResponseBody(val ast: Ast) extends AnyVal with ResponseBody[Ast] {
+  implicit final class StringBody(val ast: Ast) extends AnyVal with Body[Ast] {
     def buffer(charset: Charset): ByteBuffer =
       ByteBuffer.wrap(pushka.json.printer.print(ast).getBytes(charset))
     def contentType(charset: Charset): String =
@@ -15,22 +15,20 @@ object pushkaSupport {
   }
 
   object fromJson {
-    val JsonContentType = "application/json"
-    val CharSetPattern = """(.+);.*charset=(.+)""".r
     def unapply(request: HttpRequest): Option[Ast] = {
       val s = request.headers.get(Header.ContentType) match {
-        case Some(CharSetPattern(JsonContentType, charset)) =>
+        case Some(Header.CharsetPattern(Header.JsonContentType, charset)) =>
           try {
             new String(request.body.array(), charset)
           } catch {
             case _: java.io.UnsupportedEncodingException =>
               throw new vodka.UnsupportedCharsetException(charset)
           }
-        case Some(JsonContentType) =>
+        case Some(Header.JsonContentType) =>
           new String(request.body.array(), StandardCharsets.UTF_8)
         case Some(contentType) =>
           throw new UnsupportedMediaType(
-            expected = JsonContentType,
+            expected = Header.JsonContentType,
             given = contentType
           )
         case None =>

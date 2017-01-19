@@ -32,8 +32,8 @@ val publishSettings = Seq(
 
 val commonSettings = publishSettings ++ Seq(
   organization := "com.github.fomkin",
-  version := "0.2.1",
-  libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.0-M15" % "test",
+  version := "0.3.0",
+  libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test",
   scalacOptions ++= Seq(
     "-deprecation",
     "-feature",
@@ -51,12 +51,12 @@ lazy val pushka = project.
   settings(commonSettings: _*).
   settings(
     normalizedName := "vodka-pushka",
-    libraryDependencies += "com.github.fomkin" %% "pushka-json" % "0.6.2"
+    libraryDependencies += "com.github.fomkin" %% "pushka-json" % "0.8.0"
   ).dependsOn(http)
 
 publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 
-crossScalaVersions := Seq("2.10.6", "2.11.8")
+crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1")
 
 publishArtifact := false
 

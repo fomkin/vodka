@@ -9,6 +9,18 @@ import java.nio.charset.{Charset, StandardCharsets}
 case class HttpResponse(
     statusCode: StatusCode, headers: Map[String, String], body: ByteBuffer) {
 
+  def stringBody(): String = {
+    try {
+      headers.get(Header.ContentType) match {
+        case Some(Header.CharsetPattern(_, charset)) => new String(body.array(), charset)
+        case None => new String(body.array(), StandardCharsets.UTF_8)
+      }
+    } catch {
+      case e: MatchError =>
+        new String(body.array(), StandardCharsets.UTF_8)
+    }
+  }
+
   def toBuffer: ByteBuffer = {
 
     body.rewind()
@@ -41,7 +53,7 @@ case class HttpResponse(
 }
 
 object HttpResponse {
-  def Ok[T](body: ResponseBody[T],
+  def Ok[T](body: Body[T],
             headers: Map[String, String] = Map.empty,
             charset: Charset = StandardCharsets.UTF_8): HttpResponse = {
     val bodyBuffer = body.buffer(charset)
@@ -61,7 +73,7 @@ object HttpResponse {
   }
 
   def create[T](statusCode: StatusCode,
-                body: ResponseBody[T],
+                body: Body[T],
                 headers: Map[String, String] = Map.empty,
                 charset: Charset = StandardCharsets.UTF_8): HttpResponse = {
     val bodyBuffer = body.buffer(charset)
@@ -76,4 +88,21 @@ object HttpResponse {
         }
     )
   }
+
+  def fromBuffer(buffer: ByteBuffer,
+                 maxContentLength: Int): Option[HttpResponse] = {
+    genericHttpEntityFromBuffer[ResponseLine, HttpResponse](
+      parseTopLine = { s =>
+        val Array(version, statusCode, reasonPhrase) = s.split(" ", 3)
+        ResponseLine(version, statusCode.toInt, reasonPhrase)
+      },
+      createEntity = (topLine, headers, body) => {
+        HttpResponse(StatusCode(topLine.statusCode), headers, body)
+      },
+      buffer = buffer,
+      maxContentLength = maxContentLength
+    )
+  }
+
+  private case class ResponseLine(version: String, statusCode: Int, reasonPhrase: String)
 }

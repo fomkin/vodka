@@ -3,17 +3,14 @@ package vodka
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels._
-import java.util.concurrent.ForkJoinPool
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{Future, Promise}
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
-object Vodka {
+object VodkaServer {
 
-  val MAX_REQUEST_LINE_AND_HEADERS = 8192
-  private val threadPool = new ForkJoinPool(Runtime.getRuntime.availableProcessors())
-  implicit val executionContext = ExecutionContext.fromExecutor(threadPool)
+  import system.executionContext
 
   type RequestHandler = PartialFunction[HttpRequest, Future[HttpResponse]]
   type NotFoundHandler = HttpRequest => Future[HttpResponse]
@@ -86,9 +83,8 @@ object Vodka {
       promise.future
     }
 
-    val asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(threadPool)
     val serverChannel = AsynchronousServerSocketChannel
-      .open(asyncChannelGroup)
+      .open(system.asyncChannelGroup)
       .bind(serverAddress)
 
     val accept = cb[AsynchronousSocketChannel](serverChannel.accept((), _)) _
